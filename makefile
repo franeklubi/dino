@@ -22,3 +22,9 @@ monitor: dino.asm
 		-drive file=a.bin,format=raw,index=0,media=disk
 	echo
 	rm ./a.bin
+
+floppy: dino.asm
+	make
+	dd if=/dev/zero of=floppy.img count=1440 bs=1KiB
+	dd if=./a.bin of=floppy.img conv=notrunc
+	rm ./a.bin
