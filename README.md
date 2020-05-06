@@ -60,7 +60,7 @@ $ make run
 
 ## Acknowledgements
 * I wish to thank [nanochess (Oscar Toledo)](https://github.com/nanochess) for inspiring me to make this project and for writing his book ([Programming Boot Sector Games](https://nanochess.org/store.html)), that helped me greatly.
-* I'd also like to thank Mateusz, for helping me with coming up with the sprites included in the code.
+* I'd also like to thank Mateusz, for helping me with creating the sprites included in the code.
 
 
 <small>
@@ -68,5 +68,5 @@ Dino: 512 bytes
 </small>
 <br>
 <small>
-This README: 1654 bytes (not counting the preview gif)
+This README: 2065 bytes (not counting the preview gif)
 </small>
