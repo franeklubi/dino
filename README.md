@@ -16,6 +16,7 @@ Dino is a bootsector game (512 bytes) written in 16-bit x86 assembly, that's bas
 * [How to compile](#how-to-compile)
 * [How to play](#how-to-play)
 * [Controls](#controls)
+* [Acknowledgements](#acknowledgements)
 ---
 
 ![preview.gif](./assets/preview.gif)
@@ -57,8 +58,15 @@ $ make run
 * Use `shift` to jump
 * Use `ctrl` to crouch
 
+## Acknowledgements
+* I wish to thank [nanochess (Oscar Toledo)](https://github.com/nanochess) for inspiring me to make this project and for writing his book ([Programming Boot Sector Games](https://nanochess.org/store.html)), that helped me greatly.
+* I'd also like to thank Mateusz, for helping me with coming up with the sprites included in the code.
+
+
 <small>
 Dino: 512 bytes
-
+</small>
+<br>
+<small>
 This README: 1654 bytes (not counting the preview gif)
 </small>
