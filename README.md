@@ -64,9 +64,12 @@ $ make run
 
 
 <small>
+For now, the game can be assembled for CPU 186 and up
+</small>
+<small>
 Dino: 512 bytes
 </small>
 <br>
 <small>
-This README: 2065 bytes (not counting the preview gif)
+This README: 2176 bytes (not counting the preview gif)
 </small>
