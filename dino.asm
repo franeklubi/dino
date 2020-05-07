@@ -96,9 +96,6 @@ _game_loop:
     ; dh = amount to advance the enemies
     ; handle_draw_enemies loops through all the enemies
     handle_draw_enemies:
-        ; setting vars for draw_sprite
-        mov dl, 2               ; scaling
-
         mov cx, max_enemies
         mov di, enemies_start
     _dhe_l:
@@ -107,6 +104,8 @@ _game_loop:
         or bl, bl               ; checking if the enemy is outside the screen
         jz _dhe_re              ; if so, try creating a new one
 
+        ; setting vars for draw_sprite
+        mov dl, enemy_scaling   ; scaling
         mov si, [di+2]          ; get sprite address
         xor ax, ax
         mov al, [di+1]          ; y position
@@ -207,8 +206,8 @@ _game_loop:
         cmp cl, 0
         jng _dd_no_jump
         sub ax, cx
-
     _dd_no_jump:
+
         ; check for collisions
         push ax
         mov dx, screen_width
@@ -224,7 +223,7 @@ _game_loop:
         xor al, 0b100               ; check for ctrl key
         jnz _dd_no_crouch
 
-        mov dl, 2
+        mov dl, dino_scaling_crouched
         mov byte [rows_up_b], bh    ; bh is 0, thanks to previous mov
 
         jmp _dd_crouch_end
@@ -376,9 +375,10 @@ screen_width    equ 320
 screen_height   equ 200
 
 ; draw_dino consts
-dino_initial_y  equ 139
-dino_initial_x  equ 35
-dino_scaling    equ 3
+dino_initial_y          equ 139
+dino_initial_x          equ 35
+dino_scaling            equ 3
+dino_scaling_crouched   equ 2
 
 ; ground consts
 ground_start    equ 140*screen_width
@@ -396,6 +396,7 @@ jump            equ 30
 max_enemies     equ 40
 enemy_size      equ 1+1+2   ; (byte, byte, word)
 enemy_speed     equ 7
+enemy_scaling   equ 2
 
 ; enemy_timer_consts
 enemy_timer_max equ 20
