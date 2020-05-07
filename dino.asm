@@ -1,5 +1,7 @@
 [org 0x7c00]
 
+cpu 8086
+use16
 
 _start:
     mov ax, 0x0013
@@ -64,7 +66,10 @@ _game_loop:
         div cx              ; divide ax by 10
         add dl, 0x30        ; convert number to ascii
 
-        pusha               ; save registers so that interrupts don't interfere
+        ; saving registers so that interrupts don't interfere
+        push ax
+        push bx
+
         mov al, dl          ; get char from dl
         mov dl, bh          ; get column from bh
 
@@ -75,7 +80,10 @@ _game_loop:
 
         mov ah, 0x0e        ; printin chars bby
         int 0x10
-        popa                ; recover the registers
+
+        ; recovering the registers
+        pop bx
+        pop ax
 
         dec bh              ; decrement column
 
@@ -309,7 +317,9 @@ _dd_black:
 ; modify coords and scaling; scaling - 1 for 8x8 pixels;
 ; mov the address of the sprite's last byte to the si register (addr+7);
 draw_sprite:
-    pusha
+    push cx
+    push di
+
     mov [y_coord_w], ax
     mov [x_coord_w], bx
     mov bl, 8               ; bl will act as the sprite's byte counter
@@ -344,9 +354,6 @@ _ds_trans_done:
     pop cx
 
     loop _ds_row_pixel      ; loop for 8 pixels
-    ; decrement the pixel counter
-    ; jnz _ds_row_pixel       ; jump if not all 8 pixels drawn
-
 
     dec word [y_coord_w]    ; increase the y coord
 
@@ -359,7 +366,8 @@ _ds_trans_done:
     dec bl                  ; decrease the byte counter
     jnz _ds_coords
 
-    popa
+    pop di
+    pop cx
     ret
 
 
