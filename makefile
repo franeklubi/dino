@@ -8,7 +8,8 @@ main: dino.asm
 
 run: dino.asm
 	make
-	qemu-system-x86_64 -drive file=a.bin,format=raw,index=0,media=disk
+	qemu-system-x86_64 -drive file=a.bin,format=raw,index=0,media=disk || \
+	qemu-system-i386 -drive file=a.bin,format=raw,index=0,media=disk
 	rm ./a.bin
 
 count: dino.asm

@@ -46,7 +46,7 @@ I recommend using an emulator, namely `qemu`.
 
 * To use `qemu`, first download binary (a.bin) from the [releases section](https://github.com/franeklubi/dino/releases), then run this command:
 ```sh
-$ qemu a.bin
+$ qemu-system-x86_64 a.bin || qemu-system-i386 a.bin
 ```
 
 * If you have `make`, `nasm` and `qemu` installed, you can just use this command:
