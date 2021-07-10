@@ -99,7 +99,6 @@ _game_loop:
         mov cx, max_enemies
         mov di, enemies_start
     _dhe_l:
-        xor bx, bx
         mov bl, byte [di]       ; get x coord
         or bl, bl               ; checking if the enemy is outside the screen
         jz _dhe_re              ; if so, try creating a new one
@@ -107,7 +106,6 @@ _game_loop:
         ; setting vars for draw_sprite
         mov dl, enemy_scaling   ; scaling
         mov si, [di+2]          ; get sprite address
-        xor ax, ax
         mov al, [di+1]          ; y position
         call draw_sprite
 
@@ -152,7 +150,7 @@ _game_loop:
             shr al, 1
             jnc _re_end
 
-            add word [di+2], 8      ; changing sprite from cactus to bomber
+            add word [di+2], bomber-cactus  ; changing sprite from cactus to bomber
             sub byte [di+1], 18     ; changing bomber's vertical position
 
             shr al, 1
@@ -199,20 +197,18 @@ _game_loop:
         mov bx, dino_initial_x
 
         ; check if to subtract the jump value
-        xor cx, cx
         mov cl, @(rows_up_b)
         cmp cl, 0
         jng _dd_no_jump
-        sub ax, cx
+        sub al, cl
     _dd_no_jump:
 
         ; check for collisions
         push ax
         mov dx, screen_width
         mul dx
-        add ax, bx
-        mov di, ax
-        add di, 5*dino_scaling
+        lea di, [bx+5*dino_scaling]
+        add di, ax
         mov byte cl, [es:di]
 
         ; check for crouch
@@ -278,7 +274,7 @@ game_over:
     int 0x10
 
     mov ah, 0x0e            ; print char interrupt
-    mov cx, 10              ; 10 chars
+    mov cx, str_go_end-str_go  ; 10 chars
     mov si, str_go          ; point to game_over string
 
 _go_l:
@@ -302,15 +298,16 @@ _dd_black:
     ret
 
 
-; ax = y coord, bx = x coord, dl = scaling;
+; al = y coord, bl = x coord, dl = scaling;
 ; modify coords and scaling; scaling - 1 for 8x8 pixels;
 ; mov the address of the sprite's last byte to the si register (addr+7);
 draw_sprite:
     push cx
     push di
 
-    mov @(y_coord_w), ax
-    mov @(x_coord_w), bx
+    ; high bytes of the words will always be 0
+    mov byte @(y_coord_w), al
+    mov byte @(x_coord_w), bl
     mov bl, 8               ; bl will act as the sprite's byte counter
     mov bh, dl              ; bh will act as the row scaling counter
 
@@ -397,6 +394,7 @@ score_divisor   equ 10
 
 ; game_over string const
 str_go  db  "game over!"
+str_go_end:
 
 ; sprite data
 dino    db  0b00000110, \
