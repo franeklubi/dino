@@ -99,14 +99,14 @@ _game_loop:
         mov cx, max_enemies
         mov di, enemies_start
     _dhe_l:
-        mov bl, byte [di]       ; get x coord
+        mov bx, word [di]       ; get x,y coord
         or bl, bl               ; checking if the enemy is outside the screen
         jz _dhe_re              ; if so, try creating a new one
 
         ; setting vars for draw_sprite
         mov dl, enemy_scaling   ; scaling
         mov si, [di+2]          ; get sprite address
-        mov al, [di+1]          ; y position
+        mov al, bh              ; y position
         call draw_sprite
 
         sub byte [di], dh       ; subtract from x position
@@ -139,9 +139,7 @@ _game_loop:
             mov byte @(enemy_timer_b), al       ; setting the enemy timer
 
             ; preparing enemy
-            mov byte [di], 255      ; set horizontal position
-            mov byte [di+1], 139    ; set vertical position
-
+            mov word [di], 255 | (139 << 8) ; set horizontal & vertical position
             mov word [di+2], cactus+7   ; setting sprite to cactus
 
             ; randomizing enemy
@@ -161,7 +159,9 @@ _game_loop:
         ; end random_enemy
 
     _dhe_i_end:
-        add di, enemy_size      ; advance by enemy_size
+        ; advance by enemy_size (di += 4)
+        scasw
+        scasw
         loop _dhe_l
     ; end handle_draw_enemies
 
