@@ -23,16 +23,19 @@ _start:
 
     xor ax, ax
     ; clearing variable memory
-    mov cx, VAR_END-VAR_BASE
-    mov di, bp
-    rep ds stosb
+    mov di, VAR_END-VAR_BASE-1
+    ; use a manual loop since the destination is in ds
+    .clear:
+        mov [bp+di], al
+        dec di
+        jns .clear
 
     ; initialize vars
     mov byte @(e_t_set_b), enemy_timer_max   ; enemy timer
 
     ; draw ground line
     mov di, ground_start
-    mov cl, screen_width/2 ; ch=0 from above
+    mov cx, screen_width/2
     ; ax=0 from above
     rep stosw
 
