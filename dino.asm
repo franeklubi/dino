@@ -35,7 +35,7 @@ _start:
 
     ; draw ground line
     mov di, ground_start
-    mov cx, screen_width/2
+    mov cl, screen_width/2 ; cx=0 from above
     ; ax=0 from above
     rep stosw
 
@@ -60,21 +60,19 @@ _game_loop:
 
 
     print_score:
-        mov bh, 0x27        ; set initial column
+        mov cl, 0x27        ; cx=0, set initial column
         mov ax, [score_w]   ; get score
 
     _ps_div:
-        xor dx, dx          ; clear dx
-        mov cx, 10          ; set divisor to 10
-        div cx              ; divide ax by 10
+        cwd                 ; clear dx
+        div word [ten]      ; divide ax by 10
         add dl, 0x30        ; convert number to ascii
 
         ; saving registers so that interrupts don't interfere
         push ax
-        push bx
 
         mov al, dl          ; get char from dl
-        mov dl, bh          ; get column from bh
+        mov dl, cl          ; get column from cl
 
         mov bx, 0x000f      ; bh (page) = 0x00; bl (colour) = 0x0f (used later)
 
@@ -85,10 +83,9 @@ _game_loop:
         int 0x10
 
         ; recovering the registers
-        pop bx
         pop ax
 
-        dec bh              ; decrement column
+        dec cx              ; decrement column
 
         or ax, ax
         jnz _ps_div
@@ -132,10 +129,11 @@ _game_loop:
         jmp _dhe_i_end          ; jump to the end
 
     _dhe_re:
+        ; bl=0 on entry
         ; random_enemy assumes di is set by handle_draw_enemies
         random_enemy:
             ; checking the timer
-            cmp byte @(enemy_timer_b), 0
+            cmp byte @(enemy_timer_b), bl
             jg _re_end
 
             mov al, [e_t_set_b]
@@ -169,10 +167,11 @@ _game_loop:
     ; end handle_draw_enemies
 
 
-    handle_jump:
+    ; cx=0 on entry
+    ; handle_jump:
         mov si, rows_jump_b
         mov bx, rows_up_b
-        cmp byte [bx], 0        ; check if dino is in the air
+        cmp byte [bx], cl       ; cl=0, check if dino is in the air
         jng _hj_no_rows
         sub byte [bx], gravity  ; if so, subtract gravity from it's displacement
         jmp _hj_no_keystroke    ; and don't check for a keystroke
@@ -195,13 +194,13 @@ _game_loop:
 
 
     ; draw_dino draws dino accounting for the jump value
-    draw_dino:
-        mov ax, dino_initial_y
-        mov bx, dino_initial_x
+    ; draw_dino:
+        mov ax, dino_initial_y ; ah=0
+        mov bx, dino_initial_x ; bh=0
 
         ; check if to subtract the jump value
         mov cl, @(rows_up_b)
-        cmp cl, 0
+        cmp cl, ah ; ah=0
         jng _dd_no_jump
         sub al, cl
     _dd_no_jump:
@@ -277,6 +276,7 @@ game_over:
     int 0x10
 
     mov ah, 0x0e            ; print char interrupt
+ten equ $+1 ; re-use the immediate 10 operand in other code
     mov cx, str_go_end-str_go  ; 10 chars
     mov si, str_go          ; point to game_over string
 
