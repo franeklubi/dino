@@ -27,13 +27,13 @@ jobs:
       - name: Upload binary artifact
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: binary
+          name: a.bin
           path: a.bin
           if-no-files-found: error
 
       - name: Upload floppy artifact
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: floppy
+          name: floppy.img
           path: floppy.img
           if-no-files-found: error
