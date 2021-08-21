@@ -35,5 +35,5 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: floppy
-          path: floppy.bin
+          path: floppy.img
           if-no-files-found: error
