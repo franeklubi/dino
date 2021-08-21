@@ -6,7 +6,7 @@ endif
 a.bin: dino.asm
 	nasm -f bin -l dino.lst -o $@ $<
 
-.PHONY: run count monitor floppy clean diff
+.PHONY: run count monitor floppy clean diff count_confirm
 
 diff: a.bin
 	cut -b17- dino.lst > dino.lst.new
@@ -19,6 +19,9 @@ run: a.bin
 
 count: a.bin
 	echo -n "SIZE: "; stat -c%s ./a.bin
+
+count_confirm: a.bin
+	make -s count | grep -q 512
 
 monitor: a.bin
 	qemu-system-x86_64 -monitor stdio \

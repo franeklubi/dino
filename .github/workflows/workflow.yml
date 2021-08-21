@@ -17,9 +17,11 @@ jobs:
       - name: Set up NASM
         uses: ilammy/setup-nasm@v1.2.0
 
-      # Runs a single command using the runners shell
       - name: Build binary
         run: make
+
+      - name: Confirm count
+        run: make count_confirm
 
       - name: Build floppy
         run: make floppy
