@@ -1,0 +1,39 @@
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up NASM
+        uses: ilammy/setup-nasm@v1.2.0
+
+      # Runs a single command using the runners shell
+      - name: Build binary
+        run: make
+      
+      - name: Build floppy
+        run: make floppy
+      
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: a.bin
+          path: a.bin
+          if-no-files-found: error
+
+      - name: Upload floppy artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: floppy.img
+          path: floppy.img
+          if-no-files-found: error
