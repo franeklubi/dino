@@ -12,6 +12,8 @@
 
 Dino is a bootsector game (512 bytes) written in 16-bit x86 assembly, that's based on Chrome's t-rex runner game!
 
+The game can now be assembled for CPU 8086!
+
 ---
 * [How to play](#how-to-play)
 * [How to compile](#how-to-compile)
@@ -62,15 +64,11 @@ $ make floppy
 * I wish to thank [nanochess (Oscar Toledo)](https://github.com/nanochess) for inspiring me to make this project and for writing his book ([Programming Boot Sector Games](https://nanochess.org/store.html)), that helped me greatly.
 * I'd also like to thank Mateusz, for helping me with creating the sprites included in the code.
 
-
-<small>
-For now, the game can be assembled for CPU 186 and up
-</small>
 <br>
 <small>
 Dino: 512 bytes
 </small>
 <br>
 <small>
-This README: 2181 bytes (not counting the preview gif)
+This README: 2154 bytes (not counting the preview gif)
 </small>

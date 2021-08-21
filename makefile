@@ -3,29 +3,31 @@ ifndef VERBOSE
 .SILENT:
 endif
 
-main: dino.asm
-	nasm -f bin -o a.bin dino.asm
+a.bin: dino.asm
+	nasm -f bin -l dino.lst -o $@ $<
 
-run: dino.asm
-	make
+.PHONY: run count monitor floppy clean diff
+
+diff: a.bin
+	cut -b17- dino.lst > dino.lst.new
+	-[ -f dino.lst.old ] && diff -U1 dino.lst.old dino.lst.new
+	cp dino.lst.new dino.lst.old
+
+run: a.bin
 	qemu-system-x86_64 -drive file=a.bin,format=raw,index=0,media=disk || \
 	qemu-system-i386 -drive file=a.bin,format=raw,index=0,media=disk
-	rm ./a.bin
 
-count: dino.asm
-	make
+count: a.bin
 	echo -n "SIZE: "; stat -c%s ./a.bin
-	rm ./a.bin
 
-monitor: dino.asm
-	make
+monitor: a.bin
 	qemu-system-x86_64 -monitor stdio \
 		-drive file=a.bin,format=raw,index=0,media=disk
 	echo
-	rm ./a.bin
 
-floppy: dino.asm
-	make
+floppy: a.bin
 	dd if=/dev/zero of=floppy.img count=1440 bs=1KiB
 	dd if=./a.bin of=floppy.img conv=notrunc
-	rm ./a.bin
+
+clean:
+	rm -f a.bin dino.lst
