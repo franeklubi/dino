@@ -18,5 +18,19 @@ jobs:
         uses: ilammy/setup-nasm@v1.2.0
 
       # Runs a single command using the runners shell
-      - name: Run make
+      - name: Build binary
         run: make
+      
+      - name: Build floppy
+        run: make floppy
+      
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          # Artifact name
+          name: binaries
+          # A file, directory or wildcard pattern that describes what to upload
+          path: |
+            a.bin
+            floppy.img
+          if-no-files-found: error
