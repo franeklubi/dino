@@ -16,8 +16,6 @@ jobs:
 
       - name: Set up NASM
         uses: ilammy/setup-nasm@v1.2.0
-        with:
-          from-source: false
 
       # Runs a single command using the runners shell
       - name: Run make
