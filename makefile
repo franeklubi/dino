@@ -5,11 +5,13 @@ endif
 
 a.bin: dino.asm
 	nasm -f bin -l dino.lst -o $@ $<
+
+.PHONY: run count monitor floppy clean diff
+
+diff: a.bin
 	cut -b17- dino.lst > dino.lst.new
 	-[ -f dino.lst.old ] && diff -U1 dino.lst.old dino.lst.new
 	cp dino.lst.new dino.lst.old
-
-.PHONY: run count monitor floppy clean
 
 run: a.bin
 	qemu-system-x86_64 -drive file=a.bin,format=raw,index=0,media=disk || \
