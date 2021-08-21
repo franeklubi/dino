@@ -1,0 +1,24 @@
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up NASM
+        # You may pin to the exact commit or the version.
+        # uses: ilammy/setup-nasm@9a15c8cb72fe84e3e00527b3014de04693cf60cf
+        uses: ilammy/setup-nasm@v1.2.0
+
+      # Runs a single command using the runners shell
+      - name: Run make
+        run: make
