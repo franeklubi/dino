@@ -1,3 +1,6 @@
+%define VAR_BASE 0xfa00
+%define @(name) [bp+(name)-VAR_BASE]
+
 [org 0x7c00]
 
 cpu 8086
@@ -10,19 +13,7 @@ _start:
     mov ax, 0xa000          ; 0xa000 video segment
     mov es, ax              ; setup extended segment
 
-    ; initialize vars
-    mov word [score_w], 0   ; zeroing the score
-    mov byte [e_t_set_b], enemy_timer_max   ; enemy timer
-
-    ; clearing enemy memory
-    clear_enemies:
-        mov cx, max_enemies*enemy_size
-        mov di, enemies_start
-    _ce_l:
-        mov byte [di], 0
-        inc di
-        loop _ce_l
-    ; end clear_enemies
+    mov bp, VAR_BASE
 
     ; init screen
     mov al, 0x0f
@@ -30,10 +21,22 @@ _start:
     xor di, di
     rep stosb
 
-    ; draw ground line
     xor ax, ax
+    ; clearing variable memory
+    mov di, VAR_END-VAR_BASE-1
+    ; use a manual loop since the destination is in ds
+    .clear:
+        mov [bp+di], al
+        dec di
+        jns .clear
+
+    ; initialize vars
+    mov byte @(e_t_set_b), enemy_timer_max   ; enemy timer
+
+    ; draw ground line
     mov di, ground_start
-    mov cx, screen_width/2
+    mov cl, screen_width/2 ; cx=0 from above
+    ; ax=0 from above
     rep stosw
 
     ; init_dirt generates random dirt
@@ -46,7 +49,7 @@ _start:
 
 
 _game_loop:
-    dec byte [enemy_timer_b]    ; decreasing the enemy timer
+    dec byte @(enemy_timer_b)    ; decreasing the enemy timer
 
 
     ; clear playarea
@@ -57,21 +60,19 @@ _game_loop:
 
 
     print_score:
-        mov bh, 0x27        ; set initial column
+        mov cl, 0x27        ; cx=0, set initial column
         mov ax, [score_w]   ; get score
 
     _ps_div:
-        xor dx, dx          ; clear dx
-        mov cx, 10          ; set divisor to 10
-        div cx              ; divide ax by 10
+        cwd                 ; clear dx
+        div word [ten]      ; divide ax by 10
         add dl, 0x30        ; convert number to ascii
 
         ; saving registers so that interrupts don't interfere
         push ax
-        push bx
 
         mov al, dl          ; get char from dl
-        mov dl, bh          ; get column from bh
+        mov dl, cl          ; get column from cl
 
         mov bx, 0x000f      ; bh (page) = 0x00; bl (colour) = 0x0f (used later)
 
@@ -82,10 +83,9 @@ _game_loop:
         int 0x10
 
         ; recovering the registers
-        pop bx
         pop ax
 
-        dec bh              ; decrement column
+        dec cx              ; decrement column
 
         or ax, ax
         jnz _ps_div
@@ -99,21 +99,19 @@ _game_loop:
         mov cx, max_enemies
         mov di, enemies_start
     _dhe_l:
-        xor bx, bx
-        mov byte bl, [di]       ; get x coord
+        mov bx, word [di]       ; get x,y coord
         or bl, bl               ; checking if the enemy is outside the screen
         jz _dhe_re              ; if so, try creating a new one
 
         ; setting vars for draw_sprite
         mov dl, enemy_scaling   ; scaling
         mov si, [di+2]          ; get sprite address
-        xor ax, ax
-        mov al, [di+1]          ; y position
+        mov al, bh              ; y position
         call draw_sprite
 
         sub byte [di], dh       ; subtract from x position
         jnb _dhe_after_point
-        inc word [score_w]
+        inc word @(score_w)
         mov byte [di], 0        ; just so it doesn't overflow on me
 
         mov ax, [score_w]       ; get score
@@ -123,29 +121,26 @@ _game_loop:
         jnz _dhe_after_point    ; if score%score_divisor != 0
 
         ; decreasing the timer
-        mov bx, e_t_set_b
-        cmp byte [bx], enemy_timer_min
+        cmp byte @(e_t_set_b), enemy_timer_min
         jng _dhe_after_point    ; if e_t_set_b <= enemy_timer_min
-        dec byte [bx]
+        dec byte @(e_t_set_b)
     _dhe_after_point:
 
         jmp _dhe_i_end          ; jump to the end
 
     _dhe_re:
+        ; bl=0 on entry
         ; random_enemy assumes di is set by handle_draw_enemies
         random_enemy:
             ; checking the timer
-            mov bx, enemy_timer_b
-            cmp byte [bx], 0
+            cmp byte @(enemy_timer_b), bl
             jg _re_end
 
             mov al, [e_t_set_b]
-            mov byte [bx], al       ; setting the enemy timer
+            mov byte @(enemy_timer_b), al       ; setting the enemy timer
 
             ; preparing enemy
-            mov byte [di], 255      ; set horizontal position
-            mov byte [di+1], 139    ; set vertical position
-
+            mov word [di], 255 | (139 << 8) ; set horizontal & vertical position
             mov word [di+2], cactus+7   ; setting sprite to cactus
 
             ; randomizing enemy
@@ -154,7 +149,7 @@ _game_loop:
             shr al, 1
             jnc _re_end
 
-            add word [di+2], 8      ; changing sprite from cactus to bomber
+            add word [di+2], bomber-cactus  ; changing sprite from cactus to bomber
             sub byte [di+1], 18     ; changing bomber's vertical position
 
             shr al, 1
@@ -165,15 +160,18 @@ _game_loop:
         ; end random_enemy
 
     _dhe_i_end:
-        add di, enemy_size      ; advance by enemy_size
+        ; advance by enemy_size (di += 4)
+        scasw
+        scasw
         loop _dhe_l
     ; end handle_draw_enemies
 
 
-    handle_jump:
+    ; cx=0 on entry
+    ; handle_jump:
         mov si, rows_jump_b
         mov bx, rows_up_b
-        cmp byte [bx], 0        ; check if dino is in the air
+        cmp byte [bx], cl       ; cl=0, check if dino is in the air
         jng _hj_no_rows
         sub byte [bx], gravity  ; if so, subtract gravity from it's displacement
         jmp _hj_no_keystroke    ; and don't check for a keystroke
@@ -196,25 +194,23 @@ _game_loop:
 
 
     ; draw_dino draws dino accounting for the jump value
-    draw_dino:
-        mov ax, dino_initial_y
-        mov bx, dino_initial_x
+    ; draw_dino:
+        mov ax, dino_initial_y ; ah=0
+        mov bx, dino_initial_x ; bh=0
 
         ; check if to subtract the jump value
-        xor cx, cx
-        mov cl, [rows_up_b]
-        cmp cl, 0
+        mov cl, @(rows_up_b)
+        cmp cl, ah ; ah=0
         jng _dd_no_jump
-        sub ax, cx
+        sub al, cl
     _dd_no_jump:
 
         ; check for collisions
         push ax
         mov dx, screen_width
         mul dx
-        add ax, bx
-        mov di, ax
-        add di, 5*dino_scaling
+        lea di, [bx+5*dino_scaling]
+        add di, ax
         mov byte cl, [es:di]
 
         ; check for crouch
@@ -224,7 +220,7 @@ _game_loop:
         jnz _dd_no_crouch
 
         mov dl, dino_scaling_crouched
-        mov byte [rows_up_b], bh    ; bh is 0, thanks to previous mov
+        mov byte @(rows_up_b), bh    ; bh is 0, thanks to previous mov
 
         jmp _dd_crouch_end
     _dd_no_crouch:
@@ -247,19 +243,11 @@ _game_loop:
 
 
     ; scrolls the ground at ground_start
-    ; I'm not setting the ds in this subroutine
-    ; because it was more space-efficient to load effective address [es:si]
-    ; manually rather than setting and clearing ds
     scroll_ground:
         mov si, ground_start+screen_width+1
         mov di, ground_start+screen_width
-
         mov cx, dirt_rows-1
-    _sg_l:
-        mov al, [es:si]         ; load byte at si
-        stosb                   ; move it to di
-        lodsb                   ; advance si
-        loop _sg_l
+        rep es movsb
 
         call random_pixel       ; generate random pixel at the end
     ; end scroll_ground
@@ -288,7 +276,8 @@ game_over:
     int 0x10
 
     mov ah, 0x0e            ; print char interrupt
-    mov cx, 10              ; 10 chars
+ten equ $+1 ; re-use the immediate 10 operand in other code
+    mov cx, str_go_end-str_go  ; 10 chars
     mov si, str_go          ; point to game_over string
 
 _go_l:
@@ -312,27 +301,28 @@ _dd_black:
     ret
 
 
-; ax = y coord, bx = x coord, dl = scaling;
+; al = y coord, bl = x coord, dl = scaling;
 ; modify coords and scaling; scaling - 1 for 8x8 pixels;
 ; mov the address of the sprite's last byte to the si register (addr+7);
 draw_sprite:
     push cx
     push di
 
-    mov [y_coord_w], ax
-    mov [x_coord_w], bx
+    ; high bytes of the words will always be 0
+    mov byte @(y_coord_w), al
+    mov byte @(x_coord_w), bl
     mov bl, 8               ; bl will act as the sprite's byte counter
     mov bh, dl              ; bh will act as the row scaling counter
 
 _ds_coords:
     ; prepare starting coords
     push dx
-    mov ax, [y_coord_w]     ; get y coord
+    mov ax, @(y_coord_w)     ; get y coord
     mov dx, screen_width    ; size of pixel row
     mul dx                  ; multiply ax by screen_width
     pop dx
 
-    add ax, [x_coord_w]     ; add x coord
+    add ax, @(x_coord_w)     ; add x coord
     xchg ax, di
 
     mov cl, 8               ; cl will act as the sprite's pixel counter
@@ -354,7 +344,7 @@ _ds_trans_done:
 
     loop _ds_row_pixel      ; loop for 8 pixels
 
-    dec word [y_coord_w]    ; increase the y coord
+    dec word @(y_coord_w)    ; increase the y coord
 
     dec byte bh             ; decrement the row counter
     jnz _ds_coords          ; repeat row
@@ -405,29 +395,9 @@ enemy_timer_min equ 10
 ; score will be divided by this value when checking if to increase difficulty
 score_divisor   equ 10
 
-; draw_sprite variables
-y_coord_w       equ 0xfa00      ; word
-x_coord_w       equ 0xfa02      ; word
-
-; score variable
-score_w         equ 0xfa06
-
-; handle_jump variables
-rows_jump_b     equ 0xfa0a
-rows_up_b       equ 0xfa09
-
-; random_enemy variable
-enemy_timer_b   equ 0xfa10
-
-; variable that the enemy_timer_b will be set to after overflowing
-e_t_set_b       equ 0xfa11
-
-; handle_draw_enemies variable
-enemies_start   equ 0xfa20  ; x_pos, y_pos, sprite_addr (byte, byte, word)
-
-
 ; game_over string const
 str_go  db  "game over!"
+str_go_end:
 
 ; sprite data
 dino    db  0b00000110, \
@@ -457,5 +427,30 @@ bomber  db  0b00000011, \
             0b00000111, \
             0b00000001
 
+times 510-($-$$) db 0 
 ; the magic number
 dw 0xaa55
+
+[absolute VAR_BASE]
+; draw_sprite variables
+y_coord_w       resw 1      ; word
+x_coord_w       resw 1      ; word
+
+; score variable
+score_w         resw 1
+
+; handle_jump variables
+
+rows_up_b       resb 1
+rows_jump_b     resb 1
+
+; random_enemy variable
+enemy_timer_b   resb 1
+
+; variable that the enemy_timer_b will be set to after overflowing
+e_t_set_b       resb 1
+
+; handle_draw_enemies variable
+enemies_start   resb enemy_size * max_enemies  ; x_pos, y_pos, sprite_addr (byte, byte, word)
+
+VAR_END:
