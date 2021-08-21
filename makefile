@@ -26,7 +26,7 @@ monitor: a.bin
 	echo
 
 floppy: a.bin
-	dd if=/dev/zero of=floppy.img count=1440 bs=1KiB
+	dd if=/dev/zero of=floppy.im count=1440 bs=1KiB
 	dd if=./a.bin of=floppy.im conv=notrunc
 
 clean:
