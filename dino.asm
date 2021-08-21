@@ -431,7 +431,7 @@ bomber	db \
 	0b00000111, \
 	0b00000001
 
-times 510-($-$$) db 0
+; times 510-($-$$) db 0
 ; the magic number
 dw 0xaa55
 
