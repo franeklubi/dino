@@ -20,10 +20,10 @@ jobs:
       # Runs a single command using the runners shell
       - name: Build binary
         run: make
-      
+
       - name: Build floppy
         run: make floppy
-      
+
       - name: Upload binary artifact
         uses: actions/upload-artifact@v2.2.4
         with:
