@@ -440,7 +440,6 @@ x_coord_w       resw 1      ; word
 score_w         resw 1
 
 ; handle_jump variables
-
 rows_up_b       resb 1
 rows_jump_b     resb 1
 
