@@ -27,7 +27,7 @@ monitor: a.bin
 
 floppy: a.bin
 	dd if=/dev/zero of=floppy.img count=1440 bs=1KiB
-	dd if=./a.bin of=floppy.img conv=notrunc
+	dd if=./a.bin of=floppy.im conv=notrunc
 
 clean:
 	rm -f a.bin dino.lst
