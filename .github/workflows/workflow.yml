@@ -24,13 +24,16 @@ jobs:
       - name: Build floppy
         run: make floppy
       
-      - name: Upload a Build Artifact
+      - name: Upload binary artifact
         uses: actions/upload-artifact@v2.2.4
         with:
-          # Artifact name
-          name: binaries
-          # A file, directory or wildcard pattern that describes what to upload
-          path: |
-            a.bin
-            floppy.img
+          name: binary
+          path: a.bin
+          if-no-files-found: error
+
+      - name: Upload floppy artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: floppy
+          path: floppy.bin
           if-no-files-found: error
