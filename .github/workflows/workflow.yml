@@ -15,9 +15,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up NASM
-        # You may pin to the exact commit or the version.
-        # uses: ilammy/setup-nasm@9a15c8cb72fe84e3e00527b3014de04693cf60cf
         uses: ilammy/setup-nasm@v1.2.0
+        with:
+          from-source: false
 
       # Runs a single command using the runners shell
       - name: Run make
